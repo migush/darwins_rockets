@@ -195,6 +195,8 @@ pixi run pixi-pycharm
 | `P` | Pause simulation (press again for step-by-step) |
 | `R` | Restart simulation with new random population |
 | `Q` | Quit the application |
+| `+` or `=` | Increase mutation rate |
+| `-` | Decrease mutation rate |
 
 ### Mouse Interactions
 

@@ -82,6 +82,9 @@ class Simulation:
         # Simplified view - always show both simulation and dashboard
         self.selected_rocket = None
         self.step_once = False
+        
+        # Mutation rate adjustment
+        self.mutation_rate_step = 0.01  # Amount to change per key press
 
     def is_mouse_over_target(self, mouse_pos):
         """Check if mouse position is over the target"""
@@ -183,6 +186,53 @@ class Simulation:
             self.step_once = True
         else:
             self.paused = True
+
+    def increase_mutation_rate(self):
+        """Increase mutation rate by one step."""
+        current_rate = self.world.mutation_rate
+        new_rate = current_rate + self.mutation_rate_step
+        self.world.update_mutation_rate(new_rate)
+
+    def decrease_mutation_rate(self):
+        """Decrease mutation rate by one step."""
+        current_rate = self.world.mutation_rate
+        new_rate = current_rate - self.mutation_rate_step
+        self.world.update_mutation_rate(new_rate)
+
+    def draw_mutation_rate(self):
+        """Draw the current mutation rate and generation number on screen."""
+        # Get current generation from world stats
+        current_gen = self.world.stats.get('current_generation', 1)
+        
+        # Create text for both mutation rate and generation
+        rate_text = f"Mutation Rate: {self.world.mutation_rate:.3f}"
+        gen_text = f"Generation: {current_gen}"
+        
+        # Render both text surfaces
+        rate_surface = self.font.render(rate_text, True, (255, 255, 255))
+        gen_surface = self.font.render(gen_text, True, (255, 255, 255))
+        
+        # Position mutation rate in top-right corner
+        rate_rect = rate_surface.get_rect()
+        rate_rect.topright = (self.WIDTH - 20, 20)
+        
+        # Position generation number below mutation rate
+        gen_rect = gen_surface.get_rect()
+        gen_rect.topright = (self.WIDTH - 20, 50)
+        
+        # Draw background for mutation rate
+        rate_bg_rect = rate_rect.inflate(20, 10)
+        pygame.draw.rect(self.WIN, (0, 0, 0, 150), rate_bg_rect, border_radius=5)
+        pygame.draw.rect(self.WIN, (255, 255, 255, 100), rate_bg_rect, 2, border_radius=5)
+        
+        # Draw background for generation number
+        gen_bg_rect = gen_rect.inflate(20, 10)
+        pygame.draw.rect(self.WIN, (0, 0, 0, 150), gen_bg_rect, border_radius=5)
+        pygame.draw.rect(self.WIN, (255, 255, 255, 100), gen_bg_rect, 2, border_radius=5)
+        
+        # Draw both text surfaces
+        self.WIN.blit(rate_surface, rate_rect)
+        self.WIN.blit(gen_surface, gen_rect)
 
     def quit_sim(self):
         pygame.quit()
@@ -339,6 +389,7 @@ class Simulation:
         while True:
             dt = self.clock.tick(self.FPS) / 1000.0
             self.elapsed_time += dt if self.running and not self.paused else 0
+            
             # --- ADVANCE SIMULATION LOGIC ---
             if self.running and (not self.paused or self.step_once):
                 self.world.step()  # Advance all entities (rockets, etc.)
@@ -377,10 +428,15 @@ class Simulation:
                         self.restart()
                     elif event.key == pygame.K_q:
                         self.quit_sim()
+                    elif event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
+                        self.increase_mutation_rate()
+                    elif event.key == pygame.K_MINUS:
+                        self.decrease_mutation_rate()
             # --- Layout calculation ---
             win_width, win_height = self.WIN.get_size()
             sim_rect = pygame.Rect(0,0, win_width, win_height)
             # --- Drawing ---
             self.WIN.fill((200, 205, 220))
             self.draw_simulation_area(self.WIN, sim_rect)
+            self.draw_mutation_rate()  # Draw mutation rate if needed
             pygame.display.flip() 

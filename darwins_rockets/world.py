@@ -274,6 +274,23 @@ class World:
         new_target = Target((x, y), radius)
         self.add_entity(new_target)
 
+    def update_mutation_rate(self, new_rate):
+        """
+        Update the mutation rate for the population.
+        
+        Args:
+            new_rate: New mutation rate (0.0 to 1.0)
+        """
+        # Clamp mutation rate to valid range
+        new_rate = max(0.0, min(1.0, new_rate))
+        self.mutation_rate = new_rate
+        
+        # Update population mutation rate
+        if hasattr(self, 'population'):
+            self.population.update_mutation_rate(new_rate)
+        
+        print(f"Mutation rate updated to: {new_rate:.3f}")
+
     @property
     def target_pos(self):
         if self.target is not None:

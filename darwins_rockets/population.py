@@ -95,5 +95,14 @@ class Population:
             new_dnas.append(child_dna)
         self.dnas = new_dnas
 
+    def update_mutation_rate(self, new_rate):
+        """
+        Update the mutation rate for future generations.
+        
+        Args:
+            new_rate: New mutation rate (0.0 to 1.0)
+        """
+        self.mutation_rate = max(0.0, min(1.0, new_rate))
+
     def get_dnas(self):
         return [dna.to_list() for dna in self.dnas] 
