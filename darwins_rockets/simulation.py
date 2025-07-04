@@ -85,6 +85,12 @@ class Simulation:
         
         # Mutation rate adjustment
         self.mutation_rate_step = 0.01  # Amount to change per key press
+        
+        # Speed control
+        self.base_fps = self.FPS  # Store original FPS
+        self.current_fps = self.FPS  # Current FPS for speed control
+        self.speed_multiplier = 1.0  # Speed multiplier (1.0 = normal speed)
+        self.speed_step = 0.5  # Amount to change speed per key press
 
     def is_mouse_over_target(self, mouse_pos):
         """Check if mouse position is over the target"""
@@ -199,18 +205,40 @@ class Simulation:
         new_rate = current_rate - self.mutation_rate_step
         self.world.update_mutation_rate(new_rate)
 
+    def increase_speed(self):
+        """Increase simulation speed."""
+        self.speed_multiplier += self.speed_step
+        self.speed_multiplier = min(5.0, self.speed_multiplier)  # Cap at 5x speed
+        self.current_fps = int(self.base_fps * self.speed_multiplier)
+        print(f"Speed increased to {self.speed_multiplier:.1f}x")
+
+    def decrease_speed(self):
+        """Decrease simulation speed."""
+        self.speed_multiplier -= self.speed_step
+        self.speed_multiplier = max(0.1, self.speed_multiplier)  # Minimum 0.1x speed
+        self.current_fps = int(self.base_fps * self.speed_multiplier)
+        print(f"Speed decreased to {self.speed_multiplier:.1f}x")
+
+    def reset_speed(self):
+        """Reset speed to normal (1x)."""
+        self.speed_multiplier = 1.0
+        self.current_fps = self.base_fps
+        print("Speed reset to normal (1x)")
+
     def draw_mutation_rate(self):
-        """Draw the current mutation rate and generation number on screen."""
+        """Draw the current mutation rate, generation number, and speed on screen."""
         # Get current generation from world stats
         current_gen = self.world.stats.get('current_generation', 1)
         
-        # Create text for both mutation rate and generation
+        # Create text for mutation rate, generation, and speed
         rate_text = f"Mutation Rate: {self.world.mutation_rate:.3f}"
         gen_text = f"Generation: {current_gen}"
+        speed_text = f"Speed: {self.speed_multiplier:.1f}x"
         
-        # Render both text surfaces
+        # Render all text surfaces
         rate_surface = self.font.render(rate_text, True, (255, 255, 255))
         gen_surface = self.font.render(gen_text, True, (255, 255, 255))
+        speed_surface = self.font.render(speed_text, True, (255, 255, 255))
         
         # Position mutation rate in top-right corner
         rate_rect = rate_surface.get_rect()
@@ -219,6 +247,10 @@ class Simulation:
         # Position generation number below mutation rate
         gen_rect = gen_surface.get_rect()
         gen_rect.topright = (self.WIDTH - 20, 50)
+        
+        # Position speed below generation number
+        speed_rect = speed_surface.get_rect()
+        speed_rect.topright = (self.WIDTH - 20, 80)
         
         # Draw background for mutation rate
         rate_bg_rect = rate_rect.inflate(20, 10)
@@ -230,9 +262,15 @@ class Simulation:
         pygame.draw.rect(self.WIN, (0, 0, 0, 150), gen_bg_rect, border_radius=5)
         pygame.draw.rect(self.WIN, (255, 255, 255, 100), gen_bg_rect, 2, border_radius=5)
         
-        # Draw both text surfaces
+        # Draw background for speed
+        speed_bg_rect = speed_rect.inflate(20, 10)
+        pygame.draw.rect(self.WIN, (0, 0, 0, 150), speed_bg_rect, border_radius=5)
+        pygame.draw.rect(self.WIN, (255, 255, 255, 100), speed_bg_rect, 2, border_radius=5)
+        
+        # Draw all text surfaces
         self.WIN.blit(rate_surface, rate_rect)
         self.WIN.blit(gen_surface, gen_rect)
+        self.WIN.blit(speed_surface, speed_rect)
 
     def quit_sim(self):
         pygame.quit()
@@ -387,7 +425,7 @@ class Simulation:
 
     def run(self):
         while True:
-            dt = self.clock.tick(self.FPS) / 1000.0
+            dt = self.clock.tick(self.current_fps) / 1000.0
             self.elapsed_time += dt if self.running and not self.paused else 0
             
             # --- ADVANCE SIMULATION LOGIC ---
@@ -432,6 +470,12 @@ class Simulation:
                         self.increase_mutation_rate()
                     elif event.key == pygame.K_MINUS:
                         self.decrease_mutation_rate()
+                    elif event.key == pygame.K_UP:
+                        self.increase_speed()
+                    elif event.key == pygame.K_DOWN:
+                        self.decrease_speed()
+                    elif event.key == pygame.K_0:
+                        self.reset_speed()
             # --- Layout calculation ---
             win_width, win_height = self.WIN.get_size()
             sim_rect = pygame.Rect(0,0, win_width, win_height)

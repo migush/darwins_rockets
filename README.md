@@ -197,6 +197,9 @@ pixi run pixi-pycharm
 | `Q` | Quit the application |
 | `+` or `=` | Increase mutation rate |
 | `-` | Decrease mutation rate |
+| `↑` | Increase simulation speed |
+| `↓` | Decrease simulation speed |
+| `0` | Reset speed to normal (1x) |
 
 ### Mouse Interactions
 
